@@ -1,10 +1,22 @@
-apache-airflow==2.3.4
+apache-airflow==2.8.4
 apache-airflow-providers-docker==3.1.0
 black==22.6.0
 fastparquet==0.8.3
-feast[redis]==0.24.0
-jupyterlab==3.4.5
-mlflow==1.29.0
-pandas==1.4.4
-pyspark==3.0.1
+
+# Feast + Redis
+feast[redis]==0.48.1
+
+# Pydantic v2 eco-system cần email-validator >=2
+pydantic>=2
+email-validator
+
+# Core ML/ETL stack
+pandas==2.0.3
 scikit-learn==1.1.2
+pyspark>=3.3,<3.6
+
+mlflow==2.2.0
+jupyterlab==3.4.5
+setuptools>=65,<70
+
+

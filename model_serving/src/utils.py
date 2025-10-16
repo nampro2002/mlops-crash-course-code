@@ -1,8 +1,11 @@
 import json
 import logging
 import os
+import socket
 import sys
 from pathlib import Path
+from typing import Optional
+from urllib.parse import urlparse
 
 import numpy as np
 import pandas as pd
@@ -21,7 +24,16 @@ class AppConst:
 
 class AppPath:
     # set MODEL_SERVING_DIR in dev environment for quickly testing the code
-    ROOT = Path(os.environ.get("MODEL_SERVING_DIR", "/model_serving"))
+    _DEFAULT_ROOT = Path(__file__).resolve().parent.parent
+    _configured_root = os.environ.get("MODEL_SERVING_DIR")
+    if _configured_root:
+        ROOT = Path(_configured_root).expanduser()
+        if ROOT.is_absolute():
+            ROOT = ROOT.resolve()
+        else:
+            ROOT = (_DEFAULT_ROOT / ROOT).resolve()
+    else:
+        ROOT = _DEFAULT_ROOT
     DATA = ROOT / "data"
     DATA_SOURCES = ROOT / "data_sources"
     FEATURE_REPO = ROOT / "feature_repo"
@@ -45,6 +57,7 @@ class Config:
             "trip_completed": np.int64,
         }
         self.mlflow_tracking_uri = os.environ.get("MLFLOW_TRACKING_URI")
+        self.mlflow_tracking_uri = resolve_mlflow_tracking_uri(self.mlflow_tracking_uri)
         self.batch_input_file = os.environ.get("BATCH_INPUT_FILE")
         self.registered_model_file = os.environ.get("REGISTERED_MODEL_FILE")
         self.monitoring_service_api = os.environ.get("MONITORING_SERVICE_API")
@@ -126,3 +139,46 @@ def load_json(path) -> dict:
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
     return data
+
+
+def _default_port_for_scheme(scheme: str) -> int:
+    return 443 if scheme == "https" else 80
+
+
+def _can_connect(host: str, port: int, timeout: float = 1.0) -> bool:
+    try:
+        with socket.create_connection((host, port), timeout):
+            return True
+    except OSError:
+        return False
+
+
+def resolve_mlflow_tracking_uri(uri: Optional[str]) -> Optional[str]:
+    if not uri:
+        return uri
+
+    parsed = urlparse(uri)
+    if parsed.scheme not in {"http", "https"}:
+        return uri
+
+    host = parsed.hostname
+    if host != "host.docker.internal":
+        return uri
+
+    port = parsed.port or _default_port_for_scheme(parsed.scheme)
+    if _can_connect(host, port):
+        return uri
+
+    fallback_host = "localhost"
+    if not _can_connect(fallback_host, port):
+        return uri
+
+    fallback_netloc = parsed.netloc.replace(host, fallback_host, 1)
+    Log().log.warning(
+        "Cannot reach MLflow host %s:%s, falling back to %s",
+        host,
+        port,
+        fallback_netloc,
+    )
+
+    return parsed._replace(netloc=fallback_netloc).geturl()

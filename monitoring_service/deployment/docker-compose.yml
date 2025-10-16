@@ -1,7 +1,7 @@
 version: "3.7"
 services:
   monitoring:
-    image: $DOCKER_USER/mlops_crash_course/monitoring_service:latest
+    image: $DOCKER_USER/mlops-monitoring-service:latest
     container_name: monitoring_service
     restart: on-failure
     volumes:

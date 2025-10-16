@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import bentoml
 import feast
@@ -72,6 +72,23 @@ def save_model() -> bentoml.Model:
 
 bentoml_model = save_model()
 feature_list = bentoml_model.custom_objects["feature_list"]
+
+FEATURE_DEFAULTS: Dict[str, Union[float, int]] = {}
+for feature_name in feature_list:
+    dtype = config.feature_dict.get(feature_name)
+    default_value: Union[float, int]
+    if dtype is None:
+        default_value = 0.0
+    else:
+        np_dtype = np.dtype(dtype)
+        if np.issubdtype(np_dtype, np.integer):
+            default_value = 0
+        elif np.issubdtype(np_dtype, np.floating):
+            default_value = 0.0
+        else:
+            default_value = 0.0
+    FEATURE_DEFAULTS[feature_name] = default_value
+
 bentoml_runner = bentoml.sklearn.get(bentoml_model.tag).to_runner()
 svc = bentoml.Service(bentoml_model.tag.name, runners=[bentoml_runner])
 fs = feast.FeatureStore(repo_path=AppPath.FEATURE_REPO)
@@ -117,6 +134,31 @@ def inference(request: InferenceRequest, ctx: bentoml.Context) -> Dict[str, Any]
 
         input_features = df.drop(["driver_id"], axis=1)
         input_features = input_features[feature_list]
+
+        if input_features.isna().values.any():
+            missing_counts = input_features.isna().sum().to_dict()
+            Log().log.warning(
+                "NaNs detected in input features, applying defaults: %s",
+                missing_counts,
+            )
+            input_features = input_features.fillna(FEATURE_DEFAULTS)
+
+        remaining_missing_mask = input_features.isna().any(axis=1)
+        if remaining_missing_mask.any():
+            dropped_driver_ids = df.loc[remaining_missing_mask, "driver_id"].tolist()
+            Log().log.warning(
+                "Dropping drivers with unresolved missing features: %s",
+                dropped_driver_ids,
+            )
+            df = df.loc[~remaining_missing_mask].reset_index(drop=True)
+            input_features = input_features.loc[~remaining_missing_mask].reset_index(
+                drop=True
+            )
+
+        if df.empty:
+            raise ValueError("No drivers have complete feature values after imputation")
+
+        df.loc[:, feature_list] = input_features
         Log().log.info(f"input_features: {input_features}")
 
         result = predict(input_features)

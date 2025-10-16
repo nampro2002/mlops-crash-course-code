@@ -6,7 +6,7 @@ from docker.types import Mount
 
 
 class AppConst:
-    DOCKER_USER = Variable.get("DOCKER_USER", "mlopsvn")
+    DOCKER_USER = Variable.get("DOCKER_USER", "cannam2002")
 
 
 class AppPath:
@@ -18,13 +18,13 @@ class AppPath:
 
 class DefaultConfig:
     DEFAULT_DAG_ARGS = {
-        "owner": "mlopsvn",
+        "owner": "cannam2002",
         "retries": 0,
         "retry_delay": pendulum.duration(seconds=20),
     }
 
     DEFAULT_DOCKER_OPERATOR_ARGS = {
-        "image": f"{AppConst.DOCKER_USER}/mlops_crash_course/training_pipeline:latest",
+        "image": f"{AppConst.DOCKER_USER}/mlops:latest",
         "api_version": "auto",
         "auto_remove": True,
         "network_mode": "bridge",

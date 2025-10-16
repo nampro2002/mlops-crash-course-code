@@ -4,7 +4,7 @@ cmd=$1
 
 # constants
 DOCKER_USER="$DOCKER_USER"
-PROJECT="mlops_crash_course"
+PROJECT="mlops"
 IMAGE_NAME="data_pipeline"
 IMAGE_TAG=$(git describe --always)
 
@@ -30,13 +30,13 @@ if [[ -z "$cmd" ]]; then
 fi
 
 build() {
-    docker build --tag $DOCKER_USER/$PROJECT/$IMAGE_NAME:$IMAGE_TAG -f deployment/Dockerfile .
-    docker tag $DOCKER_USER/$PROJECT/$IMAGE_NAME:$IMAGE_TAG $DOCKER_USER/$PROJECT/$IMAGE_NAME:latest
+    docker build --tag $DOCKER_USER/$PROJECT:$IMAGE_TAG -f deployment/Dockerfile .
+    docker tag $DOCKER_USER/$PROJECT:$IMAGE_TAG $DOCKER_USER/$PROJECT:latest
 }
 
 push() {
-    docker push $DOCKER_USER/$PROJECT/$IMAGE_NAME:$IMAGE_TAG
-    docker push $DOCKER_USER/$PROJECT/$IMAGE_NAME:latest
+    docker push $DOCKER_USER/$PROJECT:$IMAGE_TAG
+    docker push $DOCKER_USER/$PROJECT:latest
 }
 
 deploy_dags() {
@@ -50,16 +50,28 @@ deploy_dags() {
     cp dags/* "$DAGS_DIR"
 }
 
+# deploy_feature_repo() {
+#     rsync -avr data_sources ../training_pipeline
+#     rsync -avr feature_repo ../training_pipeline --exclude registry
+
+#     rsync -avr data_sources ../model_serving
+#     rsync -avr feature_repo ../model_serving --exclude registry
+
+#     rsync -avr data_sources ../monitoring_service
+#     rsync -avr feature_repo ../monitoring_service --exclude registry
+#     rsync -avr scripts ../monitoring_service
+# }
+
 deploy_feature_repo() {
-    rsync -avr data_sources ../training_pipeline
-    rsync -avr feature_repo ../training_pipeline --exclude registry
+    cp -av data_sources ../training_pipeline
+    cp -av feature_repo ../training_pipeline --exclude registry
 
-    rsync -avr data_sources ../model_serving
-    rsync -avr feature_repo ../model_serving --exclude registry
+    cp -av data_sources ../model_serving
+    cp -av feature_repo ../model_serving --exclude registry
 
-    rsync -avr data_sources ../monitoring_service
-    rsync -avr feature_repo ../monitoring_service --exclude registry
-    rsync -avr scripts ../monitoring_service
+    cp -av data_sources ../monitoring_service
+    cp -av feature_repo ../monitoring_service --exclude registry
+    cp -av scripts ../monitoring_service
 }
 
 shift

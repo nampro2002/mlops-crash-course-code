@@ -1,2 +1,8 @@
-pyspark==3.0.1
-feast[redis]==0.24.0
+pip>=24.0
+setuptools>=70
+wheel>=0.41
+packaging>=24.0
+pandavro
+pyspark>=3.3,<3.6
+feast[redis]==0.48.1
+

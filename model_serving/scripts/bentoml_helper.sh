@@ -1,14 +1,17 @@
 #!/bin/bash
+set -euo pipefail
 
-cmd=$1
+cmd=${1-}
 
 usage() {
-    echo "bentoml_helper.sh <command> [options]"
-    echo "Available commands:"
-    echo " serve          serve a bentoml service"
-    echo "Available options:"
-    echo " --port=x       bentoml service's port"
-    echo " --reload       auto reload bentoml service"
+    cat <<'EOF'
+bentoml_helper.sh <command> [options]
+Available commands:
+ serve          serve a bentoml service
+Available options:
+ --port=x       bentoml service's port
+ --reload       auto reload bentoml service
+EOF
 }
 
 if [[ -z "$cmd" ]]; then
@@ -17,19 +20,22 @@ if [[ -z "$cmd" ]]; then
     exit 1
 fi
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
 serve() {
-    cd src
+    cd "$PROJECT_ROOT/src"
     bentoml serve bentoml_service:svc "$@"
 }
 
 shift
 
-case $cmd in
+case "$cmd" in
 serve)
     serve "$@"
     ;;
 *)
-    echo -n "Unknown command: $cmd"
+    echo "Unknown command: $cmd"
     usage
     exit 1
     ;;

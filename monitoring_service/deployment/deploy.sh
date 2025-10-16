@@ -4,8 +4,7 @@ cmd=$1
 
 # constants
 DOCKER_USER="$DOCKER_USER"
-PROJECT="mlops_crash_course"
-IMAGE_NAME="monitoring_service"
+PROJECT="mlops-monitoring-service"
 IMAGE_TAG=$(git describe --always)
 
 if [[ -z "$DOCKER_USER" ]]; then
@@ -30,13 +29,13 @@ if [[ -z "$cmd" ]]; then
 fi
 
 build() {
-    docker build --tag $DOCKER_USER/$PROJECT/$IMAGE_NAME:$IMAGE_TAG -f deployment/Dockerfile .
-    docker tag $DOCKER_USER/$PROJECT/$IMAGE_NAME:$IMAGE_TAG $DOCKER_USER/$PROJECT/$IMAGE_NAME:latest
+    docker build --tag $DOCKER_USER/$PROJECT:$IMAGE_TAG -f deployment/Dockerfile .
+    docker tag $DOCKER_USER/$PROJECT:$IMAGE_TAG $DOCKER_USER/$PROJECT:latest
 }
 
 push() {
-    docker push $DOCKER_USER/$PROJECT/$IMAGE_NAME:$IMAGE_TAG
-    docker push $DOCKER_USER/$PROJECT/$IMAGE_NAME:latest
+    docker push $DOCKER_USER/$PROJECT:$IMAGE_TAG
+    docker push $DOCKER_USER/$PROJECT:latest
 }
 
 compose_up() {
