@@ -5,4 +5,5 @@ packaging>=24.0
 pandavro
 pyspark>=3.3,<3.6
 feast[redis]==0.48.1
+great_expectations>=0.18,<0.19
 

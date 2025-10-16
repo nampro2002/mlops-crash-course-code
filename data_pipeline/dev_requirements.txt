@@ -9,3 +9,4 @@ pandas==2.0.3
 pyspark==3.5.1
 scikit-learn==1.1.2
 setuptools>=65,<70
+great_expectations>=0.18,<0.19

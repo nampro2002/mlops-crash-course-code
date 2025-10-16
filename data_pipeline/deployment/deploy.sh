@@ -4,8 +4,7 @@ cmd=$1
 
 # constants
 DOCKER_USER="$DOCKER_USER"
-PROJECT="mlops"
-IMAGE_NAME="data_pipeline"
+PROJECT="mlops-data_pipeline_validate"
 IMAGE_TAG=$(git describe --always)
 
 if [[ -z "$DOCKER_USER" ]]; then
